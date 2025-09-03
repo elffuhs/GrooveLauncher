@@ -13,11 +13,18 @@ importScripts('./../../dist/liveTileHelper.js');
 
 liveTileHelper.eventListener.on("draw", draw);
 var photos = [];
+var refreshInterval = 60 * 60 * 1000; // Default to 1 hour
+var refreshTimer = null;
+
 liveTileHelper.eventListener.on("photosdata", (data) => {
     //console.log("photos data!!!!!!!!", data)
     photos = data.photos;
     liveTileHelper.requestRedraw();
+});
 
+liveTileHelper.eventListener.on("update-refresh-interval", (data) => {
+    refreshInterval = data.interval;
+    scheduleRefresh();
 });
 
 
@@ -37,16 +44,37 @@ function draw(args) {
     return tileFeed;
 }
 
-// Replace the minute scheduler with a 10-second rotation using requestGoToNextPage
+// Replace the minute scheduler with a configurable refresh interval
 var page = 0
+var rotationTimer = null;
+
 function scheduleRotation() {
-    setInterval(() => {
+    if (rotationTimer) {
+        clearInterval(rotationTimer);
+    }
+    
+    rotationTimer = setInterval(() => {
         liveTileHelper.requestGoToNextPage();
         page++;
         if (page == 10) {
             liveTileHelper.requestRedraw()
         }
     }, 10000 + Math.random() * 5000); // 5 to 10 seconds
+}
+
+function scheduleRefresh() {
+    if (refreshTimer) {
+        clearTimeout(refreshTimer);
+    }
+    
+    refreshTimer = setTimeout(() => {
+        // Request new photos data from the main thread
+        postMessage({
+            action: "request-photos-refresh",
+            data: { timestamp: Date.now() }
+        });
+        scheduleRefresh(); // Schedule the next refresh
+    }, refreshInterval);
 }
 
 // Start the rotation
@@ -56,7 +84,7 @@ function init(args) {
     //console.log("Init called:", args);
     //liveTileHelper.requestRedraw();
     scheduleRotation();
-
+    scheduleRefresh();
 }
 /*setInterval(() => {
     postMessage({

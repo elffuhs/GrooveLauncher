@@ -108,6 +108,15 @@ function onWorkerMessage(event) {
         case 'requestGoToPreviousPage':
             controller.goToPreviousPage();
             break;
+        case 'request-photos-refresh':
+            // Handle photos refresh request from gallery live tile
+            if (window.photosCache) {
+                event.target.postMessage({
+                    action: "photos-data",
+                    data: { timestamp: Date.now(), photos: window.photosCache }
+                });
+            }
+            break;
         case 'test':
             break;
         default:

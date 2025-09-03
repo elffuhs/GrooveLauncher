@@ -322,6 +322,12 @@ startUpSequence([
             e.photoURL = Groove.getPhotoURL(e.id)
             return e
         })
+        
+        // Initialize gallery refresh interval if not set
+        if (!localStorage.getItem("galleryRefreshInterval")) {
+            localStorage.setItem("galleryRefreshInterval", 60 * 60 * 1000); // Default to 1 hour
+        }
+        
         GrooveBoard.boardMethods.liveTiles.refresh()
         next()
     }

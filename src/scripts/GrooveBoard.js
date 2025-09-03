@@ -397,6 +397,19 @@ const boardMethods = {
 
         }
       })
+    },
+    updateGalleryRefreshInterval: (interval) => {
+      // Update the refresh interval for gallery live tiles
+      Object.entries(window.liveTiles).forEach(liveTileBundle => {
+        const packageName = liveTileBundle[0]
+        const liveTile = liveTileBundle[1]
+        if (liveTile.uid == GrooveBoard.boardMethods.liveTiles.init.photos) {
+          liveTile.worker.postMessage({
+            action: "update-refresh-interval",
+            data: { interval: interval }
+          })
+        }
+      })
     }
     //getAppProvider:
   },

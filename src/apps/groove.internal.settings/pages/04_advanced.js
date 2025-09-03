@@ -115,3 +115,31 @@ if (localStorage["forceRTL"] == "true") {
     document.querySelector("div.force-rtl-toggle-switch > p").innerText = i18n.t("common.actions.on")
     document.querySelector("div.force-rtl-toggle-switch > div > .metro-toggle-switch").setAttribute("checked", "")
 }
+
+// Gallery refresh interval setting
+document.getElementById("gallery-refresh-interval-chooser").addEventListener('selected', (e) => {
+    const intervals = [30 * 60 * 1000, 60 * 60 * 1000, 4 * 60 * 60 * 1000, 24 * 60 * 60 * 1000]; // 30min, 1hr, 4hr, 1day in milliseconds
+    const selectedInterval = intervals[e.detail.index];
+    localStorage.setItem("galleryRefreshInterval", selectedInterval);
+    
+    // Notify the live tile system about the new interval
+    if (window.parent.GrooveBoard && window.parent.GrooveBoard.boardMethods.liveTiles) {
+        window.parent.GrooveBoard.boardMethods.liveTiles.updateGalleryRefreshInterval(selectedInterval);
+    }
+});
+
+// Initialize the gallery refresh interval setting
+const savedInterval = localStorage.getItem("galleryRefreshInterval");
+if (savedInterval) {
+    const intervals = [30 * 60 * 1000, 60 * 60 * 1000, 4 * 60 * 60 * 1000, 24 * 60 * 60 * 1000];
+    const selectedIndex = intervals.indexOf(parseInt(savedInterval));
+    if (selectedIndex !== -1) {
+        document.getElementById("gallery-refresh-interval-chooser").setAttribute("selected", selectedIndex);
+        document.getElementById("gallery-refresh-interval-chooser").selectOption(selectedIndex);
+    }
+} else {
+    // Default to 1 hour
+    localStorage.setItem("galleryRefreshInterval", 60 * 60 * 1000);
+    document.getElementById("gallery-refresh-interval-chooser").setAttribute("selected", 1);
+    document.getElementById("gallery-refresh-interval-chooser").selectOption(1);
+}

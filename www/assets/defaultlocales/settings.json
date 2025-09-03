@@ -75,7 +75,17 @@
     },
     "double_tap_to_sleep": "Double tap to sleep",
     "alternative_wallpaper": "Alternative wallpaper placing",
-    "force_rtl": "Force RTL layout"
+    "force_rtl": "Force RTL layout",
+    "gallery_refresh_interval": {
+      "title": "Gallery refresh interval",
+      "description": "How often the gallery live tile updates",
+      "options": {
+        "30_minutes": "30 minutes",
+        "1_hour": "1 hour", 
+        "4_hours": "4 hours",
+        "1_day": "1 day"
+      }
+    }
   },
   "alerts": {
     "reset": {

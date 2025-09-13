@@ -383,7 +383,13 @@ const boardMethods = {
             action: "photos-data",
             data: { timestamp: Date.now(), photos: window.photosCache }
           })
-
+          
+          // Send refresh interval setting to photos live tile
+          const refreshInterval = getGalleryRefreshInterval(packageName);
+          liveTile.worker.postMessage({
+            action: "update-refresh-interval",
+            data: { interval: refreshInterval }
+          });
         }
       })
       Object.entries(window.liveTiles).forEach(liveTileBundle => {
@@ -1428,3 +1434,21 @@ window.addEventListener("systemThemeChange", function (e) {
     backendMethods.setTheme(2, true);
   }
 })
+
+// Gallery refresh interval helper function
+function getGalleryRefreshInterval(packageName) {
+    try {
+        if (window.Groove && window.Groove.getGalleryRefreshInterval) {
+            return window.Groove.getGalleryRefreshInterval(packageName);
+        }
+    } catch (error) {
+        console.log("Error getting gallery refresh interval via Groove API:", error);
+    }
+    
+    // Fallback to localStorage
+    if (!localStorage["galleryRefreshIntervals"]) {
+        localStorage["galleryRefreshIntervals"] = JSON.stringify({});
+    }
+    const intervals = JSON.parse(localStorage["galleryRefreshIntervals"]);
+    return intervals[packageName] || "default"; // Default to "default" (1 minute)
+}

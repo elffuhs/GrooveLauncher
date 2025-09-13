@@ -150,7 +150,18 @@
       "light": "light"
     },
     "live_tile": "Live tile",
-    "show_app": "Show in apps list"
+    "show_app": "Show in apps list",
+    "gallery": {
+      "refresh_interval": "Refresh interval",
+      "refresh_interval_description": "How often the gallery live tile refreshes with new photos",
+      "intervals": {
+        "default": "Default",
+        "15min": "15 minutes",
+        "1hour": "1 hour",
+        "4hours": "4 hours",
+        "1day": "1 day"
+      }
+    }
   },
   "roles": {
     "team_groove": "Team Groove",

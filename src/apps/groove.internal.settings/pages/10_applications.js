@@ -108,6 +108,9 @@ function refreshAppList(params) {
             // Setup per-app tile preferences
             setupPerAppTilePreferences(appdetail);
 
+            // Setup gallery refresh interval setting
+            setupGalleryRefreshInterval(appdetail);
+
             pageNavigation.goToPage(6)
         } catch (error) {
 
@@ -526,4 +529,97 @@ function removePerAppIconPack(appPackageName) {
     delete iconPackPerApp[appPackageName];
     localStorage["iconPackPerApp"] = JSON.stringify(iconPackPerApp);
     console.log("Removed per-app icon pack for:", appPackageName);
+}
+
+// Gallery refresh interval functionality
+function setupGalleryRefreshInterval(appdetail) {
+    const galleryRefreshGroup = document.querySelector("#app-preference-gallery-refresh");
+    const refreshIntervalDropdown = document.querySelector("#gallery-refresh-interval-chooser");
+    
+    // Check if this is a gallery app (photos live tile)
+    const isGalleryApp = appdetail.packageName === "com.android.gallery3d" || 
+                        appdetail.packageName === "com.google.android.apps.photos" ||
+                        appdetail.packageName === "com.samsung.android.gallery" ||
+                        appdetail.packageName === "com.miui.gallery" ||
+                        appdetail.packageName === "com.oneplus.gallery" ||
+                        appdetail.packageName === "com.huawei.photos" ||
+                        appdetail.packageName === "com.oppo.gallery3d" ||
+                        appdetail.packageName === "com.vivo.gallery" ||
+                        appdetail.packageName === "com.meizu.media.gallery" ||
+                        appdetail.packageName === "com.android.camera2" ||
+                        appdetail.packageName === "com.android.camera" ||
+                        appdetail.label.toLowerCase().includes("gallery") ||
+                        appdetail.label.toLowerCase().includes("photos") ||
+                        appdetail.label.toLowerCase().includes("camera");
+    
+    if (isGalleryApp) {
+        galleryRefreshGroup.style.removeProperty("display");
+        
+        // Get current refresh interval setting
+        const currentInterval = getGalleryRefreshInterval(appdetail.packageName);
+        
+        // Set the dropdown to the current value
+        const options = refreshIntervalDropdown.querySelectorAll("div.metro-dropdown-option");
+        let selectedIndex = 0; // Default to "Default" option
+        options.forEach((option, index) => {
+            if (option.getAttribute("value") === currentInterval) {
+                selectedIndex = index;
+            }
+        });
+        refreshIntervalDropdown.setAttribute("selected", selectedIndex);
+        refreshIntervalDropdown.selectOption(selectedIndex);
+        
+        // Add event listener for changes
+        refreshIntervalDropdown.addEventListener('selected', (e) => {
+            const selectedValue = options[e.detail.index].getAttribute("value");
+            setGalleryRefreshInterval(appdetail.packageName, selectedValue);
+            
+            // Notify the photos live tile to update its refresh interval
+            if (window.parent && window.parent.liveTiles && window.parent.liveTiles.photos) {
+                window.parent.liveTiles.photos.worker.postMessage({
+                    action: "update-refresh-interval",
+                    data: { interval: selectedValue }
+                });
+            }
+        });
+    } else {
+        galleryRefreshGroup.style.display = "none";
+    }
+}
+
+function getGalleryRefreshInterval(packageName) {
+    try {
+        if (window.parent.Groove && window.parent.Groove.getGalleryRefreshInterval) {
+            return window.parent.Groove.getGalleryRefreshInterval(packageName);
+        }
+    } catch (error) {
+        console.log("Error getting gallery refresh interval via Groove API:", error);
+    }
+    
+    // Fallback to localStorage
+    if (!localStorage["galleryRefreshIntervals"]) {
+        localStorage["galleryRefreshIntervals"] = JSON.stringify({});
+    }
+    const intervals = JSON.parse(localStorage["galleryRefreshIntervals"]);
+    return intervals[packageName] || "default"; // Default to "default" (1 minute)
+}
+
+function setGalleryRefreshInterval(packageName, interval) {
+    try {
+        if (window.parent.Groove && window.parent.Groove.setGalleryRefreshInterval) {
+            window.parent.Groove.setGalleryRefreshInterval(packageName, interval);
+        }
+    } catch (error) {
+        console.log("Error setting gallery refresh interval via Groove API:", error);
+    }
+    
+    // Also save to localStorage
+    if (!localStorage["galleryRefreshIntervals"]) {
+        localStorage["galleryRefreshIntervals"] = JSON.stringify({});
+    }
+    const intervals = JSON.parse(localStorage["galleryRefreshIntervals"]);
+    intervals[packageName] = interval;
+    localStorage["galleryRefreshIntervals"] = JSON.stringify(intervals);
+    
+    console.log("Set gallery refresh interval for", packageName, "to", interval);
 }
